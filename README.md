@@ -90,5 +90,7 @@ psql -U username -d dbname -f schema.sql
 ##Team members    
 Shreshtha Shrinivas - 24124046
 Yuvraj - 24124046
-Vivek Kumar - 24124044
 Vansh Kulria-24124043
+Vivek Kumar - 24124044
+Himanshu Sejwal-24124016
+
