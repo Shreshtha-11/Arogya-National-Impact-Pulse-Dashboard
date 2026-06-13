@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Arogya National Impact Pulse — NGO Impact Dashboard</title>
+  
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="An interactive, national M&E impact measurement dashboard for Arogya Rural Health Alliance, translating raw ASHA field data into decision-relevant KPIs across Indian states and districts.">
+  
+  <!-- Global Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+  
+  <!-- Chart.js CDN for visualizations -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <!-- Lucide Icons for clean modern iconography -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+  <!-- TOP NAVIGATION / BRANDING & FILTERS HEADER -->
+  <nav class="navbar" id="app-navbar">
+    <div class="brand-section">
+      <div class="brand-logo">आ</div>
+      <div class="brand-title-group">
+        <h1>Arogya National Impact Pulse</h1>
+        <p>M&E Dashboard &bull; National Rural Health Alliance</p>
+      </div>
+    </div>
+    
+    <!-- GLOBAL DASHBOARD FILTERS (3-TIER CASCADE) -->
+    <div class="global-filters">
+      <!-- 1. State Filter -->
+      <div class="filter-group">
+        <label for="filter-state"><i data-lucide="map-pin" style="width: 14px; height: 14px; vertical-align: middle;"></i> State/UT</label>
+        <select id="filter-state" class="select-input" onchange="window.ARHA_APP.handleStateFilterChange()">
+          <option value="ALL">All India</option>
+          <!-- Populated dynamically by app.js -->
+        </select>
+      </div>
+
+      <!-- 2. District Filter -->
+      <div class="filter-group">
+        <label for="filter-district">District</label>
+        <select id="filter-district" class="select-input" onchange="window.ARHA_APP.handleDistrictFilterChange()" disabled>
+          <option value="ALL">All Districts</option>
+        </select>
+      </div>
+      
+      <!-- 3. Village Filter -->
+      <div class="filter-group">
+        <label for="filter-village">Village</label>
+        <select id="filter-village" class="select-input" onchange="window.ARHA_APP.handleFiltersChange()" disabled>
+          <option value="ALL">All Villages</option>
+        </select>
+      </div>
+      
+      <!-- 4. Timeframe Filter -->
+      <div class="filter-group">
+        <label for="filter-timeframe">Period</label>
+        <select id="filter-timeframe" class="select-input" onchange="window.ARHA_APP.handleFiltersChange()">
+          <option value="YTD">YTD (Last 12 Months)</option>
+          <option value="Q4-2025">Q4 2025</option>
+          <option value="Q1-2026">Q1 2026</option>
+          <option value="Q2-2026">Q2 2026 (Current)</option>
+        </select>
+      </div>
+      
+      <button class="theme-toggle-btn" id="theme-toggle-btn" onclick="window.ARHA_APP.toggleTheme()" title="Toggle Light/Dark Theme">
+        <i data-lucide="sun" id="theme-icon-sun"></i>
+        <i data-lucide="moon" id="theme-icon-moon" style="display: none;"></i>
+      </button>
+    </div>
+  </nav>
+
+  <!-- NAVIGATION TABS -->
+  <div class="nav-tabs-wrapper">
+    <ul class="nav-tabs">
+      <li>
+        <button class="tab-btn active" onclick="window.ARHA_APP.switchView('pulse', this)">
+          <i data-lucide="activity"></i> Monday Pulse
+        </button>
+      </li>
+      <li>
+        <button class="tab-btn" onclick="window.ARHA_APP.switchView('tree', this)">
+          <i data-lucide="git-merge"></i> Logical KPI Tree
+        </button>
+      </li>
+      <li>
+        <button class="tab-btn" onclick="window.ARHA_APP.switchView('quality', this)">
+          <i data-lucide="shield-alert"></i> Data Quality Lab
+          <span id="tab-badge-alerts" class="badge-dq-err" style="display: none; font-size: 0.65rem; margin-left: 0.25rem;">0</span>
+        </button>
+      </li>
+      <li>
+        <button class="tab-btn" onclick="window.ARHA_APP.switchView('knowledge', this)">
+          <i data-lucide="book-open"></i> M&E Knowledge Hub
+        </button>
+      </li>
+    </ul>
+  </div>
+
+  <!-- MAIN VIEWPORT -->
+  <main class="app-content">
+
+    <!-- VIEW 1: MONDAY MORNING PULSE (ED VIEW) -->
+    <section id="view-pulse" class="view-section active">
+      <div class="pulse-header">
+        <div>
+          <h2>Monday Morning Executive Pulse</h2>
+          <div class="pulse-timestamp">
+            <i data-lucide="clock" style="width: 13px; height: 13px;"></i>
+            <span>Data synced: <strong id="sync-time">Just Now</strong></span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- PRIMARY KPI CARD GRID -->
+      <div class="pulse-grid">
+        <!-- ANC-4 Compliance -->
+        <div class="pulse-card pc-primary" id="kpi-card-anc4">
+          <div class="pulse-card-header">
+            <span class="pulse-card-title">ANC-4 Compliance Rate</span>
+            <div class="pulse-card-icon"><i data-lucide="heart"></i></div>
+          </div>
+          <div class="pulse-card-value" id="val-anc4">0%</div>
+          <div class="pulse-card-trend trend-up">
+            <i data-lucide="trending-up"></i> <span id="trend-anc4">+3.5% vs Last Quarter</span>
+          </div>
+          <div class="pulse-card-progress">
+            <div class="pulse-card-progress-bar" id="prog-anc4" style="width: 0%;"></div>
+          </div>
+        </div>
+
+        <!-- Institutional Birth Rate -->
+        <div class="pulse-card pc-success" id="kpi-card-inst">
+          <div class="pulse-card-header">
+            <span class="pulse-card-title">Institutional Delivery</span>
+            <div class="pulse-card-icon"><i data-lucide="home"></i></div>
+          </div>
+          <div class="pulse-card-value" id="val-inst">0%</div>
+          <div class="pulse-card-trend trend-up">
+            <i data-lucide="trending-up"></i> <span id="trend-inst">Meeting National NHM standard</span>
+          </div>
+          <div class="pulse-card-progress">
+            <div class="pulse-card-progress-bar" id="prog-inst" style="width: 0%;"></div>
+          </div>
+        </div>
+
+        <!-- Malnutrition Recovery Rate -->
+        <div class="pulse-card pc-warning" id="kpi-card-sam">
+          <div class="pulse-card-header">
+            <span class="pulse-card-title">SAM Growth Recovery</span>
+            <div class="pulse-card-icon"><i data-lucide="smile"></i></div>
+          </div>
+          <div class="pulse-card-value" id="val-sam">0%</div>
+          <div class="pulse-card-trend trend-down">
+            <i data-lucide="trending-down"></i> <span id="trend-sam">Target: 85% Recovery</span>
+          </div>
+          <div class="pulse-card-progress">
+            <div class="pulse-card-progress-bar" id="prog-sam" style="width: 0%;"></div>
+          </div>
+        </div>
+
+        <!-- Active Registrations Tracked -->
+        <div class="pulse-card pc-info" id="kpi-card-tracked">
+          <div class="pulse-card-header">
+            <span class="pulse-card-title">National Reach (Tracked)</span>
+            <div class="pulse-card-icon"><i data-lucide="users"></i></div>
+          </div>
+          <div class="pulse-card-value" id="val-tracked">0</div>
+          <div class="pulse-card-trend trend-neutral">
+            <i data-lucide="minus"></i> <span id="trend-tracked">Target: 700 cases</span>
+          </div>
+          <div class="pulse-card-progress">
+            <div class="pulse-card-progress-bar" id="prog-tracked" style="width: 0%;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RED FLAGS & PROGRAM EFFICIENCY ROW -->
+      <div class="secondary-pulse-row">
+        <!-- Critical Red Flags -->
+        <div class="alerts-panel">
+          <div class="panel-title-row">
+            <h3><i data-lucide="alert-octagon" style="color: var(--color-error);"></i> Action Required: Critical National Red Flags</h3>
+            <span class="badge-dq-err" id="flag-count-badge">0 Mismatches</span>
+          </div>
+          <div class="alert-list" id="dashboard-alert-list">
+            <!-- Populated dynamically by app.js -->
+          </div>
+        </div>
+
+        <!-- Cost Per Impact Results -->
+        <div class="cost-impact-panel">
+          <div class="panel-title-row">
+            <h3><i data-lucide="indian-rupee" style="color: var(--color-info);"></i> Donor Cost-Per-Impact</h3>
+          </div>
+          <div class="cost-impact-list" id="cost-impact-list">
+            <!-- Populated dynamically by app.js -->
+          </div>
+        </div>
+      </div>
+
+      <!-- CHARTS PANEL -->
+      <div class="charts-grid">
+        <!-- Outcomes Over Time -->
+        <div class="charts-panel-card">
+          <div class="panel-title-row">
+            <h3>Maternal Outcomes Trend (Monthly Progress)</h3>
+          </div>
+          <div class="chart-wrapper">
+            <canvas id="chart-outcomes-trend"></canvas>
+          </div>
+        </div>
+
+        <!-- Malnutrition Status -->
+        <div class="charts-panel-card">
+          <div class="panel-title-row">
+            <h3>Child Growth Screenings Breakdown (Under 5)</h3>
+          </div>
+          <div class="chart-wrapper">
+            <canvas id="chart-nutrition-doughnut"></canvas>
+          </div>
+        </div>
+
+        <!-- Budget Allocation -->
+        <div class="charts-panel-card">
+          <div class="panel-title-row">
+            <h3>Allocated Budget vs Actual Program Spending</h3>
+          </div>
+          <div class="chart-wrapper">
+            <canvas id="chart-budget-bar"></canvas>
+          </div>
+        </div>
+
+        <!-- Demographics (Income Reach) -->
+        <div class="charts-panel-card">
+          <div class="panel-title-row">
+            <h3>Socio-Economic Reach (Mothers Registered)</h3>
+          </div>
+          <div class="chart-wrapper">
+            <canvas id="chart-demographics-pie"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 2: LOGICAL KPI TREE (THEORY OF CHANGE EXPLORER) -->
+    <section id="view-tree" class="view-section">
+      <div class="kpi-tree-view-container">
+        <div class="tree-instruction-bar">
+          <i data-lucide="info"></i>
+          <span>This interactive tree maps ASHA activities to impacts. Click any KPI node to inspect targets, baseline values, M&E formulas, and owner contacts. Mapped dependencies will highlight dynamically.</span>
+        </div>
+        
+        <div class="tree-main-layout">
+          <!-- The visual interactive flow board -->
+          <div class="tree-canvas-container" id="tree-canvas-container">
+            <svg class="tree-connections-svg" id="tree-connections-svg"></svg>
+            
+            <!-- IMPACT ROW -->
+            <div class="tree-tier-row" id="tier-impact">
+              <span class="tree-tier-label">Impact Tier (Socio-Economic Change)</span>
+            </div>
+            
+            <!-- OUTCOME ROW -->
+            <div class="tree-tier-row" id="tier-outcome">
+              <span class="tree-tier-label">Outcome Tier (Behavior & Health Shift)</span>
+            </div>
+
+            <!-- OUTPUT ROW -->
+            <div class="tree-tier-row" id="tier-output">
+              <span class="tree-tier-label">Output Tier (Deliverables & Records)</span>
+            </div>
+
+            <!-- ACTIVITY ROW -->
+            <div class="tree-tier-row" id="tier-activity">
+              <span class="tree-tier-label">Activity Tier (NGO Tasks & Fieldwork)</span>
+            </div>
+          </div>
+
+          <!-- Sidebar Details Panel -->
+          <div class="tree-detail-panel" id="tree-detail-panel">
+            <div id="tree-detail-empty" class="dq-empty-state" style="padding: 1.5rem;">
+              <i data-lucide="mouse-pointer-click"></i>
+              <p style="font-size: 0.8rem;">Click any card in the flowchart to view M&E definitions, formulas, and target owner details.</p>
+            </div>
+            <div id="tree-detail-content" style="display: none;">
+              <span class="detail-node-tier-badge" id="det-node-badge">Outcome</span>
+              <h3 class="detail-node-name" id="det-node-name">ANC-4 Compliance Rate</h3>
+              <p class="detail-node-desc" id="det-node-desc"></p>
+              
+              <div class="detail-metric-list">
+                <div class="detail-metric-row">
+                  <span class="detail-metric-label">Formula / Metric:</span>
+                  <span class="detail-metric-value" id="det-node-metric"></span>
+                </div>
+                <div class="detail-metric-row">
+                  <span class="detail-metric-label">Baseline Value:</span>
+                  <span class="detail-metric-value" id="det-node-baseline">42%</span>
+                </div>
+                <div class="detail-metric-row">
+                  <span class="detail-metric-label">Target Goal:</span>
+                  <span class="detail-metric-value" id="det-node-target">80%</span>
+                </div>
+                <div class="detail-metric-row">
+                  <span class="detail-metric-label">Reporting Cadence:</span>
+                  <span class="detail-metric-value" id="det-node-cadence">Weekly</span>
+                </div>
+                <div class="detail-metric-row">
+                  <span class="detail-metric-label">Target Owner:</span>
+                  <span class="detail-metric-value" id="det-node-owner">State Director</span>
+                </div>
+              </div>
+              
+              <p class="pulse-card-title" style="margin-bottom: 0.5rem; font-size: 0.7rem;">Target Progress</p>
+              <div class="detail-node-progress-box">
+                <span class="detail-progress-percent" id="det-node-progress-pct">0%</span>
+                <span style="font-size: 0.75rem; color: var(--text-secondary);" id="det-node-progress-label">Current: 65% / Goal: 80%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 3: DATA QUALITY & VALIDATION LAB -->
+    <section id="view-quality" class="view-section">
+      <div class="data-quality-layout">
+        <!-- Configuration & Presets Sidebar -->
+        <div class="dq-config-panel">
+          <!-- Quality Score Card -->
+          <div class="dq-score-card">
+            <div class="dq-score-circle score-perfect" id="dq-score-circle">100%</div>
+            <h3 class="dq-score-label">Field Data Health Index</h3>
+            <p class="dq-score-count" id="dq-anomaly-count">0 anomalies detected in database</p>
+          </div>
+
+          <!-- Upload presets -->
+          <div class="dq-upload-card">
+            <h3 style="font-size: 0.95rem; margin-bottom: 0.75rem;">Import Field Worker Records</h3>
+            <p style="font-size: 0.75rem; color: var(--text-secondary); line-height: 1.4; margin-bottom: 1rem;">
+              Simulate data quality audits. Load the preset below containing common fieldworker typing errors (impossible child weights, chronological ANC date order issues, and state-district boundary mismatches).
+            </p>
+            
+            <div class="dq-presets-row">
+              <button class="btn btn-secondary" onclick="window.ARHA_APP.loadDirtyDataPreset()">
+                <i data-lucide="file-warning"></i> Load Preset with Field Errors
+              </button>
+              <button class="btn btn-success" onclick="window.ARHA_APP.loadCleanDataPreset()">
+                <i data-lucide="check-circle-2"></i> Reset to 100% Clean Database
+              </button>
+            </div>
+            
+            <h4 style="font-size: 0.8rem; margin-top: 1.25rem; margin-bottom: 0.5rem; color: var(--text-muted); text-transform: uppercase;">Paste RAW CSV Data</h4>
+            <textarea class="csv-paste-area" id="dq-csv-paste" placeholder="motherName,age,state,district,village,incomeCategory,regDate,anc1&#10;Rekha Bai,26,Rajasthan,Patna,Patna Clinic,BPL,2025-10-01,2025-11-15"></textarea>
+            <div style="margin-top: 0.75rem; display: flex; gap: 0.5rem;">
+              <button class="btn btn-secondary" style="flex: 1;" onclick="window.ARHA_APP.validateCSVInput()">Validate Paste</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Review & Correct Panel -->
+        <div class="dq-review-panel">
+          <div class="panel-title-row">
+            <h3>Field Record Audit & Inline Correction Queue</h3>
+            <span class="badge-dq-warn" id="dq-review-badge">0 Warnings</span>
+          </div>
+          
+          <div class="dq-table-container">
+            <!-- Empty state when database is clean -->
+            <div id="dq-clean-state" class="dq-empty-state">
+              <i data-lucide="check-circle-2" style="color: var(--color-success);"></i>
+              <p>Excellent! Database is 100% Clean. No field errors found. Indicators and dashboard charts are in sync.</p>
+            </div>
+            
+            <table class="dq-table" id="dq-review-table" style="display: none;">
+              <thead>
+                <tr>
+                  <th>Record ID</th>
+                  <th>Patient Name</th>
+                  <th>Flagged Field</th>
+                  <th>Invalid Entry</th>
+                  <th>Validation Message</th>
+                  <th>Severity</th>
+                  <th>Quick Fix Inline Action</th>
+                </tr>
+              </thead>
+              <tbody id="dq-review-table-body">
+                <!-- Populated dynamically -->
+              </tbody>
+            </table>
+          </div>
+          
+          <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+            <button class="btn btn-success" id="btn-save-corrections" onclick="window.ARHA_APP.applyCorrections()" style="display: none;">
+              <i data-lucide="save"></i> Save Corrections & Update Dashboard
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 4: M&E KNOWLEDGE HUB (USER MANUAL & DICTIONARY) -->
+    <section id="view-knowledge" class="view-section">
+      <div class="knowledge-layout">
+        <!-- Sidebar Navigation -->
+        <div class="knowledge-toc">
+          <div class="knowledge-toc-title">Handbook Index</div>
+          
+          <div style="position: relative; margin-bottom: 1rem;">
+            <input type="text" id="knowledge-search" placeholder="Search guide..." 
+                   style="width: 100%; padding: 0.45rem 2rem 0.45rem 0.65rem; font-size: 0.8rem; background-color: var(--bg-input); border: 1px solid var(--border-color); border-radius: 0.375rem; color: var(--text-primary); outline: none;"
+                   oninput="window.ARHA_APP.searchKnowledge()">
+            <i data-lucide="search" style="position: absolute; right: 0.65rem; top: 0.5rem; width: 14px; height: 14px; color: var(--text-muted);"></i>
+          </div>
+          
+          <ul class="toc-list" id="knowledge-toc-list">
+            <!-- Populated dynamically -->
+          </ul>
+        </div>
+
+        <!-- Reading Pane -->
+        <div class="knowledge-reader">
+          <article class="reader-content" id="knowledge-article-viewport">
+            <!-- Populated dynamically -->
+          </article>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="app-footer">
+    <p>Arogya Rural Health Alliance &bull; Non-Technical M&E Toolkit &bull; Designed under Logical Framework Theory of Change.</p>
+  </footer>
+
+  <!-- Scripts loading order -->
+  <script src="data.js"></script>
+  <script src="validation.js"></script>
+  <script src="kpiTree.js"></script>
+  <script src="guide.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

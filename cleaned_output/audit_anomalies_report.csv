@@ -1,0 +1,5 @@
+Record ID,Patient Name,Flagged Field,Invalid Value,Severity,Validation Message
+PREG-9002,Rekha Bai,district,Patna,ERROR,Boundary Mismatch: District 'Patna' does not belong to State 'Rajasthan'
+PREG-9003,Sunita Katara,age,12,ERROR,Mother's age must be between 15 and 49 years
+CHLD-9001,Rahul Meena,weightKg,45.0,WARNING,Biological Outlier: Weight (45.0kg) is unusual for age (9 months)
+CHLD-9006,Gita Damor,weightKg,-7.5,ERROR,Weight must be greater than zero
