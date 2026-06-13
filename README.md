@@ -1,4 +1,9 @@
-﻿# Arogya National Impact Pulse Dashboard
+##team member    
+shreshtha shrinivas - 24124046
+yuvraj - 24124046
+vivek kumar - 24124044
+
+ # Arogya National Impact Pulse Dashboard
 
 An interactive, national-scale Monitoring & Evaluation (M&E) dashboard designed for **Arogya Rural Health Alliance (ARHA)**. This dashboard translates raw community health worker (ASHA) field logs into decision-relevant indicators for the Executive Director, Program Managers, and Donors.
 
