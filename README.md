@@ -6,7 +6,7 @@ Project Deployment: https://clever-eclair-25df77.netlify.app/
 
 ---
 
-## 🌟 Key M&E Problems Solved
+##  Key M&E Problems Solved
 
 ### 1. The Monday Morning Pulse (ED's "One Number")
 The dashboard highlights the **ANC-4 Completion Rate** (percentage of pregnant mothers who completed 4+ prenatal checkups) and the **SAM Child Growth Recovery Rate** as the primary weekly indicators. Antenatal compliance is the single most predictive leading indicator of safe deliveries and healthy neonatal outcomes.
@@ -27,7 +27,7 @@ Links financial spreadsheets directly to field results. Dynamically scales expen
 
 ---
 
-## 📁 Repository Directory Structure
+##  Repository Directory Structure
 
 ```text
 impact-dashboard/
@@ -48,7 +48,7 @@ impact-dashboard/
 
 ---
 
-## 🚀 How to Run and Test
+##  How to Run and Test
 
 ### 1. Run the Dashboard UI
 Double-click the **`index.html`** file in your project folder to run it in any web browser. No server compilation or packages are required.
@@ -78,7 +78,7 @@ psql -U username -d dbname -f schema.sql
 
 ---
 
-## 🛡️ Technical Stack & CDNs
+##  Technical Stack & CDNs
 - **Core Structure:** HTML5 & Vanilla ES6 JavaScript Modules
 - **Styles:** Custom Vanilla CSS Grid & Flexbox (Default Dark Theme)
 - **Charts:** Chart.js (Loaded via jsDelivr CDN)
